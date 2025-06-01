@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Materialliste</title>
+<!-- Font Awesome Icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background: #4d79ff;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+    }
+
+    .header h1 {
+      margin: 0;
+      flex: 1 1 100%;
+    }
+
+    .header input {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .controls input,
+    .controls button {
+      flex: 1 1 100%;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .controls button {
+      background: #4d79ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f0f5;
+    }
+
+    .delete-btn {
+      color: #e74c3c;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+    }
+
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background: #fff;
+        border-radius: 6px;
+      }
+
+      td {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        border: none;
+        border-bottom: 1px solid #eee;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: #333;
+      }
+
+      canvas {
+        max-width: 100%;
+      }
+    }
+  
+:root {
+  --bg-color: #f9f9f9;
+  --text-color: #000;
+  --header-bg: #4d79ff;
+  --header-text: #fff;
+  --table-bg: #fff;
+  --border-color: #ddd;
+  --input-bg: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --header-bg: #1e3a8a;
+    --header-text: #fff;
+    --table-bg: #1e1e1e;
+    --border-color: #333;
+    --input-bg: #2c2c2c;
+  }
+}
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+.header {
+  background: var(--header-bg);
+  color: var(--header-text);
+}
+.controls input,
+.controls button,
+.header input {
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+table {
+  background: var(--table-bg);
+}
+th, td {
+  border-color: var(--border-color);
+}
+
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.3s, color 0.3s;
+}
+
+.header, .controls {
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.header input,
+.controls input,
+.controls button {
+  padding: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.controls button {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+button#savePdf {
+  margin-top: 20px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border-radius: 6px;
+  background-color: #4d79ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+
+button#savePdf:hover {
+  background-color: #375acc;
+}
+
+tr {
+  transition: background-color 0.2s ease;
+}
+
+tr:hover {
+  background-color: rgba(77,121,255,0.1);
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <meta name="theme-color" content="#4d79ff"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon.png"/>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log("SW registered", reg))
+          .catch(err => console.error("SW registration failed", err));
+      });
+    }
+  </script>
+
+</head>
+<body>
+<div class="section" id="main"><div class="header">
+<h1>Materialliste</h1>
+<input id="headerNote" placeholder="Notiz eingeben..." type="text"/>
+</div></div>
+<div class="section" id="main"><div class="controls">
+<input id="searchNumber" list="numberList" placeholder="Artikelnummer" type="text"/>
+<input id="searchName" list="nameList" placeholder="Artikelbezeichnung" type="text"/>
+<input id="inputQuantity" placeholder="Menge" type="number" min="1" value="1"/>
+<button id="addButton">Hinzufügen</button>
+<datalist id="numberList"></datalist>
+<datalist id="nameList"></datalist>
+</div></div>
+<div class="section" id="main"><table id="picklist">
+<thead>
+<tr>
+<th>Nummer</th>
+<th>Bezeichnung</th>
+<th>Menge</th>
+<th>Barcode</th>
+<th>Aktion</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table></div>
+<div class="section" id="main"><button id="savePdf">Liste als PDF speichern</button><button id="exportExcel" style="margin-top:10px; padding: 12px 16px; font-size: 1rem; border-radius: 6px; background-color: #27ae60; color: white; border: none; cursor: pointer; display: block; width: 100%;">Liste als Excel speichern</button><button id="clearList" style="margin-top:10px; padding: 12px 16px; font-size: 1rem; border-radius: 6px; background-color: #e74c3c; color: white; border: none; cursor: pointer; display: block; width: 100%;">Liste löschen</button></div>
+<script>
+    
+const dataList = [{"nummer": 8020, "bezeichnung": "FloorZilla daily swing 40cm rot"}, {"nummer": 54466, "bezeichnung": "Taski Sani Mouldout 750ml"}, {"nummer": 61055, "bezeichnung": "Haug Spezialbürste Borsti weiß"}, {"nummer": 61119, "bezeichnung": "Haug WC Bürste weiß 40cm"}, {"nummer": 62107, "bezeichnung": "VM Sprint Brush Progressive 50 cm grau/weiß"}, {"nummer": 70014, "bezeichnung": "Vil \"Universal\" grün Gr.S(50)"}, {"nummer": 70015, "bezeichnung": "Vil \"Universal\" grün Gr.M (50)"}, {"nummer": 70016, "bezeichnung": "Vil \"Universal\" grün Gr.L (50)"}, {"nummer": 70017, "bezeichnung": "Gummihandschuh Heavyweight Gr.S Vileda Latexhandschuh Robust"}, {"nummer": 70018, "bezeichnung": "Gummihandschuh Heavyweight Gr.M Vileda Latexhandschuh Robust"}, {"nummer": 70019, "bezeichnung": "Vil \"HeavyWeight\" grün Gr.L"}, {"nummer": 70023, "bezeichnung": "Handschuh Heim & Haus Gr.L Vileda"}, {"nummer": 70025, "bezeichnung": "Glasfee 1l"}, {"nummer": 70026, "bezeichnung": "Glasfee ECO 1l (12)"}, {"nummer": 70033, "bezeichnung": "Saugtüten Nilco IC215 10 Stk."}, {"nummer": 70092, "bezeichnung": "Muril Schmutzbrecher 10l"}, {"nummer": 70181, "bezeichnung": "Milizid Citro 10l"}, {"nummer": 70211, "bezeichnung": "Themodur-Satina 5 Liter"}, {"nummer": 70238, "bezeichnung": "Copex Grundreiniger 1 Liter"}, {"nummer": 70300, "bezeichnung": "CC-R1000 750ml"}, {"nummer": 70335, "bezeichnung": "Rabbasol Spezial 10 Liter"}, {"nummer": 70343, "bezeichnung": "Müllsack 120 l weiß"}, {"nummer": 70351, "bezeichnung": "Attila Krustenbrecher 2x1l"}, {"nummer": 70386, "bezeichnung": "Procur Konzentrat 1 Liter"}, {"nummer": 70408, "bezeichnung": "Gliz Metallic"}, {"nummer": 70432, "bezeichnung": "Kiehl Eloxa prima 750ml (6)"}, {"nummer": 70467, "bezeichnung": "Milostar 500ml"}, {"nummer": 70475, "bezeichnung": "3m Superpad 508mm 20\" grün"}, {"nummer": 70491, "bezeichnung": "Kiehl Parketto-Clean-Konz. 1l"}, {"nummer": 70513, "bezeichnung": "R 1000 10l"}, {"nummer": 70580, "bezeichnung": "Forex Intensivreiniger 1l (12)"}, {"nummer": 70599, "bezeichnung": "Padscheibe Legno 41 cm 16\""}, {"nummer": 70602, "bezeichnung": "Bodenglanz 750 ml"}, {"nummer": 70610, "bezeichnung": "Sebo Staubsauger 370 Evo"}, {"nummer": 70629, "bezeichnung": "Sprühex  750 ml"}, {"nummer": 70637, "bezeichnung": "Sani-Flow Rohrreiniger 1 Liter"}, {"nummer": 70653, "bezeichnung": "Eimer 6 Liter Rot, Blau, Gelb Vermop"}, {"nummer": 70696, "bezeichnung": "Scandic Mono Halter 120 cm"}, {"nummer": 70750, "bezeichnung": "Scandic Mono Ceran 120 cm"}, {"nummer": 70769, "bezeichnung": "Kehrset"}, {"nummer": 70882, "bezeichnung": "Müllsack 120 l T70 Blau"}, {"nummer": 70912, "bezeichnung": "Besen Elaston 50 cm Rot"}, {"nummer": 70939, "bezeichnung": "Magic Maxx 5l (2)"}, {"nummer": 70947, "bezeichnung": "Bendurol Forte"}, {"nummer": 70963, "bezeichnung": "Buzil BUZ Defoam G478 1l (12)"}, {"nummer": 70971, "bezeichnung": "Easy Glide Unger 1 Liter"}, {"nummer": 71011, "bezeichnung": "Eilfix Almo-Ex 1l (12) Steinreiniger"}, {"nummer": 71021, "bezeichnung": "Isi Maxx"}, {"nummer": 71056, "bezeichnung": "Taski Jontec Tensol F3c 1l (6)"}, {"nummer": 71080, "bezeichnung": "Sprintmop Basic 40cm"}, {"nummer": 71099, "bezeichnung": "VM Sprint Plus 50cm"}, {"nummer": 71102, "bezeichnung": "Alustiel 140cm"}, {"nummer": 71111, "bezeichnung": "VM Gerätehalterung Varietta I #5541"}, {"nummer": 71112, "bezeichnung": "VM Equipe Gummi f. Stielhalter 20-28mm"}, {"nummer": 71129, "bezeichnung": "Aufnehmer weiß"}, {"nummer": 71153, "bezeichnung": "Handsprüher Neutral"}, {"nummer": 71196, "bezeichnung": "Kiehl Trend 5l (2)"}, {"nummer": 71218, "bezeichnung": "3M Superpad 406mm 16\" grün"}, {"nummer": 71234, "bezeichnung": "Besen Arenga 40 cm"}, {"nummer": 71250, "bezeichnung": "Bad-Putzer blau oder gelb"}, {"nummer": 71255, "bezeichnung": "3M Scotch-Brite Pflegeschwamm grün/weiß(10)"}, {"nummer": 71277, "bezeichnung": "Brittex-Tuch Lochtuch PVA natur 35x40cm"}, {"nummer": 71285, "bezeichnung": "Eimer 5 Liter"}, {"nummer": 71293, "bezeichnung": "Baueimer schwarz 12 Liter"}, {"nummer": 71307, "bezeichnung": "Sigella 10 Liter"}, {"nummer": 71315, "bezeichnung": "VM Halter 80cm (5) #0083"}, {"nummer": 71331, "bezeichnung": "VM Sprint Plus 40cm "}, {"nummer": 71333, "bezeichnung": "Staubwedel Synthetik 126cm 3-farbig Teleskopstiel"}, {"nummer": 71358, "bezeichnung": "VM Feuchtwischmop Basic 60cm"}, {"nummer": 71366, "bezeichnung": "Feuchtwisch-Bezug 80 cm Basic Vermop"}, {"nummer": 71374, "bezeichnung": "Feuchtwisch-Bezug 110 cm"}, {"nummer": 71382, "bezeichnung": "Feuchtwisch-Bezug 130 cm"}, {"nummer": 71404, "bezeichnung": "Fensterwischer 35 cm"}, {"nummer": 71412, "bezeichnung": "Fensterwischer 45cm"}, {"nummer": 71420, "bezeichnung": "Ung. Wischerschiene S 55cm"}, {"nummer": 71439, "bezeichnung": "Einwasch-Träger (Fell-Halter) 45cm"}, {"nummer": 71455, "bezeichnung": "Fell 45 cm Vermop"}, {"nummer": 71471, "bezeichnung": "Lobacare SportCare 10l"}, {"nummer": 71498, "bezeichnung": "Gummi Wischer 40 cm Beco"}, {"nummer": 71535, "bezeichnung": "Handschuh Lightweight S Vil."}, {"nummer": 71536, "bezeichnung": "Handschuh Lightweight M Vil."}, {"nummer": 71537, "bezeichnung": "Handschuh Lightweight L Vil."}, {"nummer": 71538, "bezeichnung": "Vil LightWeight\" beige Gr.XL"}, {"nummer": 71552, "bezeichnung": "Drucksprüher Floortop"}, {"nummer": 71555, "bezeichnung": "Wasserschieber Holz 40cm"}, {"nummer": 71579, "bezeichnung": "Buzil G440 1l"}, {"nummer": 71587, "bezeichnung": "Tempex Ultra 10l"}, {"nummer": 71595, "bezeichnung": "Saugtüten Jetvac"}, {"nummer": 71633, "bezeichnung": "Handfeger Arenga"}, {"nummer": 71668, "bezeichnung": "Handspachtel mit Holzgriff"}, {"nummer": 71676, "bezeichnung": "Professional System3 Ariel 20l"}, {"nummer": 71684, "bezeichnung": "Besenstiel Beco Holz"}, {"nummer": 71692, "bezeichnung": "Professional System4 Ariel 20l"}, {"nummer": 71706, "bezeichnung": "Hygiene Beutel per 100 Stk."}, {"nummer": 71714, "bezeichnung": "Kehrblech"}, {"nummer": 71722, "bezeichnung": "HM Bacillol Tissues 100Tü (12)"}, {"nummer": 71749, "bezeichnung": "Leder im Fell"}, {"nummer": 71781, "bezeichnung": "Magnetic Wischer"}, {"nummer": 71840, "bezeichnung": "Twister Pad grün 534mm  21\" (2)"}, {"nummer": 71870, "bezeichnung": "Müllsack 120 l Blau"}, {"nummer": 71871, "bezeichnung": "Abfallsack 120l 60my schwarz"}, {"nummer": 71889, "bezeichnung": "Unimagic 1 Liter"}, {"nummer": 71927, "bezeichnung": "3M Superpad 203mm 8\" rot (10)"}, {"nummer": 71935, "bezeichnung": "Padscheibe grün 310mm  12\""}, {"nummer": 71943, "bezeichnung": "Maxx Into Citrus 2* 1l (12)"}, {"nummer": 71951, "bezeichnung": "Incidin Plus 2l (3)"}, {"nummer": 71978, "bezeichnung": "3M Superpad 406mm 16\" schwarz"}, {"nummer": 71994, "bezeichnung": "3M Superpad 406mm 16\" rot (5)"}, {"nummer": 72021, "bezeichnung": "Halbschuh Riyoyo Größe 10"}, {"nummer": 72028, "bezeichnung": "Into Citrus 10l"}, {"nummer": 72036, "bezeichnung": "Molkereibürste Nylon"}, {"nummer": 72044, "bezeichnung": "Dopomat"}, {"nummer": 72052, "bezeichnung": "Padscheibe 46 cm Schwarz 18\""}, {"nummer": 72060, "bezeichnung": "Somat Spezial-Salz1,2kg Pack"}, {"nummer": 72095, "bezeichnung": "Stielbürsten Kunststoff Haug"}, {"nummer": 72096, "bezeichnung": "HOLZSTIEL 1,4 M OHNE GEWINDE"}, {"nummer": 72109, "bezeichnung": "Ung. Trim 10+1 10cm"}, {"nummer": 72115, "bezeichnung": "Dip n Clean Handball Harzentferner 5L"}, {"nummer": 72141, "bezeichnung": "Sterillium Classic"}, {"nummer": 72168, "bezeichnung": "CC-Parkett u. Kork Glanz 750ml"}, {"nummer": 72176, "bezeichnung": "Padscheibe 33 cm blau 13\""}, {"nummer": 72184, "bezeichnung": "Saugtüten Cleanfix S10"}, {"nummer": 72214, "bezeichnung": "Teleskopstange 2 Meter"}, {"nummer": 72222, "bezeichnung": "Teleskopstange 4m"}, {"nummer": 72230, "bezeichnung": "CC-Parkett-/Korkreiniger 750ml"}, {"nummer": 72249, "bezeichnung": "Milizid Citro 1l"}, {"nummer": 72265, "bezeichnung": "Super-Pad Janex rot 530mm/21\""}, {"nummer": 72273, "bezeichnung": "Kiehl Dopomat-brillant 10l"}, {"nummer": 72281, "bezeichnung": "Super-Pad Janex rot 460mm/18\" Innenloch 228mm"}, {"nummer": 72303, "bezeichnung": "HM Sterillium Virugard 500ml"}, {"nummer": 72346, "bezeichnung": "Vollpflege 750ml Pallmann"}, {"nummer": 72350, "bezeichnung": "Milizid Lemonfresh 1l"}, {"nummer": 72362, "bezeichnung": "Taski Jontec 300 F4a 1l (6)"}, {"nummer": 72365, "bezeichnung": "Buzil Planta Bucasan Hit P921 1l"}, {"nummer": 72370, "bezeichnung": "Saugtüten Nilco S20 10 Stück"}, {"nummer": 72400, "bezeichnung": "Fahrwagen Einfach"}, {"nummer": 72419, "bezeichnung": "WC-Papier Weiß 2-lagig"}, {"nummer": 72439, "bezeichnung": "VM Sprint Mop White Magic 40cm"}, {"nummer": 72443, "bezeichnung": "Hängewarnschild Vermop"}, {"nummer": 72449, "bezeichnung": "Into Citrus 1l"}, {"nummer": 72478, "bezeichnung": "VM Sprint Mop White Magic 50cm"}, {"nummer": 72494, "bezeichnung": "Wischer / Schrubber 30 cm Beco weiß 30cm Wischer Beco 30cm"}, {"nummer": 72508, "bezeichnung": "Wischer / Schrubber 40 cm Beco"}, {"nummer": 72510, "bezeichnung": "Maxx Into Active 1l"}, {"nummer": 72555, "bezeichnung": "Wasserschieber Holz 50cm"}, {"nummer": 72567, "bezeichnung": "Prisma Steinprotektor 5 Liter"}, {"nummer": 72575, "bezeichnung": "Indur Maxx 1l (12)"}, {"nummer": 72576, "bezeichnung": "Maxx Indur S 1l"}, {"nummer": 72577, "bezeichnung": "Easy Quick A Konzentrat 1l"}, {"nummer": 72591, "bezeichnung": "Feuchtwisch-Halter 160cm"}, {"nummer": 72656, "bezeichnung": "Ariel System 1 flüssig 20l"}, {"nummer": 72664, "bezeichnung": "Desifor Forte AF"}, {"nummer": 72699, "bezeichnung": "Wassereinfüllhilfe Vermop"}, {"nummer": 72710, "bezeichnung": "Fahrwagen Doppel"}, {"nummer": 72729, "bezeichnung": "Pilotenjacke blau"}, {"nummer": 72737, "bezeichnung": "DSC Compact Tabs 5in1 Pack"}, {"nummer": 72788, "bezeichnung": "Staubbiene "}, {"nummer": 72818, "bezeichnung": "Haushaltsrollen"}, {"nummer": 72834, "bezeichnung": "Mili Caribic 200ml (12)"}, {"nummer": 72877, "bezeichnung": "Mistral 1 Liter"}, {"nummer": 72885, "bezeichnung": "Feuchtwisch-Bezug 50 cm Brush"}, {"nummer": 72907, "bezeichnung": "Müllbeutel 60 - 80 l weiß"}, {"nummer": 72915, "bezeichnung": "Handpad grün "}, {"nummer": 72958, "bezeichnung": "Streusalz 50 Kg"}, {"nummer": 72966, "bezeichnung": "Ung. Wischergummi soft 35cm"}, {"nummer": 72974, "bezeichnung": "Ung. Wischergummi soft 45cm"}, {"nummer": 72982, "bezeichnung": "Ung. Wischergummi soft 55cm"}, {"nummer": 73008, "bezeichnung": "Milly Allzweckreiniger 1 Liter"}, {"nummer": 73032, "bezeichnung": "VM Presse VK4"}, {"nummer": 73059, "bezeichnung": "Bacollol AF"}, {"nummer": 73075, "bezeichnung": "Padscheibe 46 cm Blau 18\""}, {"nummer": 73091, "bezeichnung": "Padscheibe 460mm weiß 18\""}, {"nummer": 73113, "bezeichnung": "Amidol 500ml"}, {"nummer": 73122, "bezeichnung": "Hitachi Schlauch"}, {"nummer": 73123, "bezeichnung": "Hitachi Verlängerungsrohr"}, {"nummer": 73125, "bezeichnung": "Tana Tanex vivaceram 5l"}, {"nummer": 73149, "bezeichnung": "Feuchtwisch-Bezug 40cm Ceran"}, {"nummer": 73210, "bezeichnung": "Schaumsprühkopf Bode"}, {"nummer": 73211, "bezeichnung": "Schirocco Basic 5l (2)"}, {"nummer": 73245, "bezeichnung": "WC-Garnitur Topf-Form (30)"}, {"nummer": 73253, "bezeichnung": "Heizkörperbürste U-Form 37cm"}, {"nummer": 73261, "bezeichnung": "Urinalbürste"}, {"nummer": 73288, "bezeichnung": "Vacu-Fresh 10Btl. à 5g (10)"}, {"nummer": 73334, "bezeichnung": "HM Einmalpumpe langer Auslauf 500ml"}, {"nummer": 73350, "bezeichnung": "Schirocco Clean 1l"}, {"nummer": 73380, "bezeichnung": "Novo Pen-Off 200ml (12)+ Schreibtischreiniger"}, {"nummer": 73385, "bezeichnung": "Novo Pen-Off 500ml"}, {"nummer": 73423, "bezeichnung": "Herren Latzhosen Brüggershemke"}, {"nummer": 73431, "bezeichnung": "Herren Jacke Übergang"}, {"nummer": 73450, "bezeichnung": "Herren Latzhose Dipasch"}, {"nummer": 73466, "bezeichnung": "Bendurol Maxx "}, {"nummer": 73467, "bezeichnung": "Maxx Bendurol 2 5l"}, {"nummer": 73512, "bezeichnung": "Tuklar"}, {"nummer": 73555, "bezeichnung": "Heizkörperbürste 75cm (10)"}, {"nummer": 73566, "bezeichnung": "Kodiak Sanitär 5l"}, {"nummer": 73598, "bezeichnung": "SamoLind 100ml (12)"}, {"nummer": 73628, "bezeichnung": "SamoGlove 100ml (12)"}, {"nummer": 73644, "bezeichnung": "VM Presseneinlage #886510"}, {"nummer": 73679, "bezeichnung": "Grizzly Unterhaltsreiniger 5 Liter"}, {"nummer": 73714, "bezeichnung": "CimoCid Sensitive 1l (6)"}, {"nummer": 73725, "bezeichnung": "Steinglanz P323 1 Liter"}, {"nummer": 73768, "bezeichnung": "Vileda Schwamm Grün"}, {"nummer": 73814, "bezeichnung": "KC-Handtuchrolle weiß Airflex "}, {"nummer": 73822, "bezeichnung": "Conductive Star"}, {"nummer": 73849, "bezeichnung": "Fensterklingen 1 Stück"}, {"nummer": 73911, "bezeichnung": "Energy Booster 1l (12)"}, {"nummer": 73946, "bezeichnung": "Magic Oil Care 750 ml"}, {"nummer": 73954, "bezeichnung": "Spinnfegerkopf"}, {"nummer": 73989, "bezeichnung": "Saugtüten Whisper V8 10S"}, {"nummer": 74004, "bezeichnung": "Fresh Orange 500ml (6)"}, {"nummer": 74020, "bezeichnung": "Eimer Oval"}, {"nummer": 74039, "bezeichnung": "Seifencreme 500 ml"}, {"nummer": 74040, "bezeichnung": "FloorZilla daily swing 40cm blau"}, {"nummer": 74063, "bezeichnung": "Padscheibe 41cm Braun SPP"}, {"nummer": 74100, "bezeichnung": "Microfastertuch grün"}, {"nummer": 74101, "bezeichnung": "Streusalz 25 Kilogramm"}, {"nummer": 74152, "bezeichnung": "Papierhandtuch rein Natur einlagig"}, {"nummer": 74160, "bezeichnung": "VM Wringboy Eimer 15l #9590"}, {"nummer": 74187, "bezeichnung": "Besen, Arenga 50"}, {"nummer": 74195, "bezeichnung": "Besen, Mischhaar 50"}, {"nummer": 74196, "bezeichnung": "BECOnnect 2.0 Saalbesen 100cm"}, {"nummer": 74197, "bezeichnung": "Schrankfeger 130cm (10)"}, {"nummer": 74217, "bezeichnung": "Superpad 457mm 18\" rot"}, {"nummer": 74284, "bezeichnung": "Superpad 533mm 21\"weiß"}, {"nummer": 74292, "bezeichnung": "Superpad 533mm 21\" rot"}, {"nummer": 74314, "bezeichnung": "Saugtüten Sebo 360 10 Stück"}, {"nummer": 74315, "bezeichnung": "Nilco-Saugtüten S20 / S8 10er"}, {"nummer": 74316, "bezeichnung": "Sebo-Saugtüten 360/370 10er"}, {"nummer": 74317, "bezeichnung": "Micro-Hygienefilter"}, {"nummer": 74320, "bezeichnung": "Numatic Filter Pods 10Stk"}, {"nummer": 74357, "bezeichnung": "3M Superpad 505mm 20\" rot (5)"}, {"nummer": 74365, "bezeichnung": "Einwasch-Träger (Fell-Halter) 35cm"}, {"nummer": 74373, "bezeichnung": "Fell 35 cm Vermop"}, {"nummer": 74381, "bezeichnung": "Sicherheitsschuh S3"}, {"nummer": 74462, "bezeichnung": "Taski Dust Cloth 100Stk in ein Pack"}, {"nummer": 74465, "bezeichnung": "Vil Staubbindetuch 24x60cm (20)"}, {"nummer": 74470, "bezeichnung": "Atemschutzmaske FFP2"}, {"nummer": 74489, "bezeichnung": "Meiko Trapezwischer 60cm"}, {"nummer": 74497, "bezeichnung": "Dr.Schnell Handsprüher Forol 600ml"}, {"nummer": 74535, "bezeichnung": "Loba Cleaner 1 Liter"}, {"nummer": 74578, "bezeichnung": "Rapido 500ml (6)"}, {"nummer": 74586, "bezeichnung": "CC-PU-Reiniger 5l"}, {"nummer": 74594, "bezeichnung": "Quick Tric Concentrate 1l (12)"}, {"nummer": 74675, "bezeichnung": "Pad-Sch.41cm braun"}, {"nummer": 74713, "bezeichnung": "Padscheibe 410mm beige"}, {"nummer": 74756, "bezeichnung": "Haug Spachtel PP weiß"}, {"nummer": 74764, "bezeichnung": "3M Superpad 330mm 13\" rot (5)"}, {"nummer": 74837, "bezeichnung": "Lodan Maxx 5l (2)"}, {"nummer": 74888, "bezeichnung": "Floortop 10l"}, {"nummer": 74934, "bezeichnung": "Petra 1l "}, {"nummer": 74969, "bezeichnung": "Sprühköpfe gelb"}, {"nummer": 74985, "bezeichnung": "VM Warnschild (6) Rutschgefahr"}, {"nummer": 74993, "bezeichnung": "Sebo-Saugtüten G2 10er"}, {"nummer": 75019, "bezeichnung": "3M Superpad 355mm 14\" rot (5)"}, {"nummer": 75078, "bezeichnung": "Somat Klarspüler 750ml"}, {"nummer": 75082, "bezeichnung": "Vikan Easy shine kit Glasinnenreinigungset"}, {"nummer": 75124, "bezeichnung": "Persil Pulver 1,33 kg Pack"}, {"nummer": 75167, "bezeichnung": "Überlaufbürste"}, {"nummer": 75183, "bezeichnung": "Vil Padmaster eckig grau (10)"}, {"nummer": 75209, "bezeichnung": "Glasfee ECO 10l"}, {"nummer": 75221, "bezeichnung": "Papierhandtücher 2-lagig"}, {"nummer": 75222, "bezeichnung": "Tork Reflex WT weiß 20x35 M4 Wischtuch1lg 6Rllà300m Tissue M"}, {"nummer": 75280, "bezeichnung": "Floortop 1l"}, {"nummer": 75286, "bezeichnung": "Floortop ECO 10l"}, {"nummer": 75288, "bezeichnung": "Milizid ECO 1l (12)"}, {"nummer": 75289, "bezeichnung": "Milizid ECO 10l"}, {"nummer": 75329, "bezeichnung": "Handschuhe Neopren"}, {"nummer": 75337, "bezeichnung": "Perocid 1l"}, {"nummer": 75450, "bezeichnung": "Vil Handpad Heavy Duty schwarz"}, {"nummer": 75469, "bezeichnung": "Feuchtwisch-Bezug Twixter Tronic light 40cm"}, {"nummer": 75477, "bezeichnung": "Feuchtwisch-Halter Twixter 40 cm"}, {"nummer": 75507, "bezeichnung": "Putzlappen"}, {"nummer": 75510, "bezeichnung": "Putzlappen aus Baumwolle 10kg"}, {"nummer": 75523, "bezeichnung": "Überwurfschürze Gr.1-3"}, {"nummer": 75566, "bezeichnung": "CC-PU-Reiniger 750ml (6)"}, {"nummer": 75574, "bezeichnung": "Gastro Pur 10l"}, {"nummer": 75620, "bezeichnung": "Gastro Pur 1l"}, {"nummer": 75625, "bezeichnung": "Gastro Pur Eco 1l (12)"}, {"nummer": 75639, "bezeichnung": "Papiergreifzange Nifty"}, {"nummer": 75663, "bezeichnung": "Aschesammler"}, {"nummer": 75825, "bezeichnung": "Rapa Classic Vollwaschm. 20kg"}, {"nummer": 75842, "bezeichnung": "BECOnnect 2.0 Saalbesen 80cm Elaston Holzkörper roh"}, {"nummer": 75965, "bezeichnung": "Besen Mischhaar 60 cm"}, {"nummer": 75981, "bezeichnung": "Vil Micro Tuff plus blau"}, {"nummer": 76104, "bezeichnung": "WC-Bürste m.Randreiniger (100)"}, {"nummer": 76123, "bezeichnung": "Kiehl Diwa-Pronto 10l Saurer Klarspüler"}, {"nummer": 76147, "bezeichnung": "Rabbasol H4 12 Kg"}, {"nummer": 76163, "bezeichnung": "Intensivreiniger 750ml Für Holz & Kork"}, {"nummer": 76198, "bezeichnung": "CC-Vollpflege matt 750ml (6)"}, {"nummer": 76260, "bezeichnung": "Müllbeutel 60 l weiß"}, {"nummer": 76261, "bezeichnung": "Müllbeutel Premium 60 l "}, {"nummer": 76262, "bezeichnung": "Tuch gelb Grizzly "}, {"nummer": 76263, "bezeichnung": "Tuch blau  Grizzly"}, {"nummer": 76264, "bezeichnung": "Tuch rot Grizzly "}, {"nummer": 76265, "bezeichnung": "Tuch grün Grizzly "}, {"nummer": 76384, "bezeichnung": "Saugtüten Nilfisk Backum"}, {"nummer": 76422, "bezeichnung": "Saugtüten Nilco 1207 10 Stück"}, {"nummer": 76457, "bezeichnung": "Milifix 1l"}, {"nummer": 76465, "bezeichnung": "Padhalter mit Handgriff Vileda"}, {"nummer": 76473, "bezeichnung": "Fleckenpad Blau"}, {"nummer": 76481, "bezeichnung": "Alustiel Ausziehbar Vermop"}, {"nummer": 76686, "bezeichnung": "Besen Mischhaar 100 cm"}, {"nummer": 76708, "bezeichnung": "Kehrschaufel Schwarz 22cm"}, {"nummer": 76716, "bezeichnung": "3M Superpad 406mm 16\" weiß"}, {"nummer": 76740, "bezeichnung": "SamtaMed 100ml (12)"}, {"nummer": 77101, "bezeichnung": "Tana Apesin Waschmittel"}, {"nummer": 77102, "bezeichnung": "Rapa Extra desinfizierend 12kg"}, {"nummer": 77151, "bezeichnung": "Dosierkappen"}, {"nummer": 77216, "bezeichnung": "Nilco Staubsauger S8 "}, {"nummer": 77232, "bezeichnung": "Handfeger"}, {"nummer": 77265, "bezeichnung": "Dreiturm Torma BAC  1l"}, {"nummer": 77267, "bezeichnung": "Easy Quick Konzentrat 1l (12)"}, {"nummer": 77283, "bezeichnung": "Sprintmop Basic 50cm"}, {"nummer": 77291, "bezeichnung": "Eimer 17 Liter Rot Vermop"}, {"nummer": 77321, "bezeichnung": "Sidol Metallpolish 250 ml"}, {"nummer": 77445, "bezeichnung": "VM Messbecher mit Skala 500ml"}, {"nummer": 77446, "bezeichnung": "Dosierbecher 500ml Dr.Schnell"}, {"nummer": 77447, "bezeichnung": "Messbecher 250ml mit Skala VM"}, {"nummer": 77448, "bezeichnung": "Messbecher 3l Dr.Schnell"}, {"nummer": 77449, "bezeichnung": "Rapido Kaugummi-Ex 500ml Spray"}, {"nummer": 77453, "bezeichnung": "Hygiene Wasserschieber 45cm"}, {"nummer": 77577, "bezeichnung": "Hitachi Papierfilterbtl. 2lg"}, {"nummer": 77658, "bezeichnung": "Griff Edelstahl Vermop"}, {"nummer": 77712, "bezeichnung": "Onemü 1l"}, {"nummer": 77716, "bezeichnung": "Easy Clean HD+  530mm /21 Zoll weiß Pad"}, {"nummer": 77717, "bezeichnung": "Easy Clean HD+ 500mm/20 zoll weiß Pad"}, {"nummer": 77718, "bezeichnung": "3M Melamin Pad 510mm 20\" Spezialpad (5)"}, {"nummer": 77720, "bezeichnung": "Milor 500ml"}, {"nummer": 77763, "bezeichnung": "Rapido 10x1kg"}, {"nummer": 77835, "bezeichnung": "Easy Quick N 1 l"}, {"nummer": 77836, "bezeichnung": "Forol 1l"}, {"nummer": 77837, "bezeichnung": "Buzil Planta Universal  P910 1l (12)"}, {"nummer": 77838, "bezeichnung": "Forol ECO 1l (12)"}, {"nummer": 77895, "bezeichnung": "Schrubber "}, {"nummer": 77941, "bezeichnung": "Milibac N"}, {"nummer": 77968, "bezeichnung": "VM Toplock Glassman (10) #2743"}, {"nummer": 77981, "bezeichnung": "Ecolab Nachfüllflasche 1l"}, {"nummer": 77992, "bezeichnung": "Müllbeutel 30 l weiß"}, {"nummer": 77993, "bezeichnung": "Müllbeutel 30 Liter 50 Stk. Premium Deiss (36021)"}, {"nummer": 77995, "bezeichnung": "Meiko Vlies-Allzwecktuch weiß"}, {"nummer": 78042, "bezeichnung": "Sanitärreiniger Scalex 10 Liter"}, {"nummer": 78077, "bezeichnung": "Fleck-ex PRO17 500ml"}, {"nummer": 78108, "bezeichnung": "Solid Safety Tough Dots"}, {"nummer": 78115, "bezeichnung": "Graffitti GR3 5 Liter"}, {"nummer": 78166, "bezeichnung": "Hygiene Wasserschieber 55cm"}, {"nummer": 78190, "bezeichnung": "Mr.Mint Bio-Geruchs-Stop 1l"}, {"nummer": 78211, "bezeichnung": "WC-Bürste PPN weiß Kunststoff, Rundkopf (100)"}, {"nummer": 78336, "bezeichnung": "Griff Lockhead Vermop"}, {"nummer": 78387, "bezeichnung": "3M Graffiti GR3000 500ml (4)"}, {"nummer": 78522, "bezeichnung": "Gelenkteil Vermop Teleskopstange"}, {"nummer": 78530, "bezeichnung": "NeomaxxGMS 10 Liter"}, {"nummer": 78557, "bezeichnung": "Sprintmop Tronic 40cm"}, {"nummer": 78565, "bezeichnung": "Damenkittel Grün"}, {"nummer": 78700, "bezeichnung": "Desifor Forte AF"}, {"nummer": 78786, "bezeichnung": "Seifencreme rose 10 l"}, {"nummer": 78840, "bezeichnung": "WC-Papier Basic 3-lagig"}, {"nummer": 78875, "bezeichnung": "Abstauber Maler-Qualität (12)"}, {"nummer": 78913, "bezeichnung": "Sator 1l (12)"}, {"nummer": 79006, "bezeichnung": "Reflex Microtuch"}, {"nummer": 79057, "bezeichnung": "Sprintmop Tronic 50cm"}, {"nummer": 79100, "bezeichnung": "CWS BestFoam Neutral 500ml"}, {"nummer": 79197, "bezeichnung": "Fleckenradierer 3M Scotch-Br."}, {"nummer": 79219, "bezeichnung": "3M Superpad 508mm 20\" weiß"}, {"nummer": 79235, "bezeichnung": "Marmor- & Granitpolish 1 Liter"}, {"nummer": 79243, "bezeichnung": "Edelsteinseife HMK 324 1Ltr. Möller-Chemie"}, {"nummer": 79278, "bezeichnung": "Grundreiniger R155 1 Liter"}, {"nummer": 79316, "bezeichnung": "Tana Longlive Conductan"}, {"nummer": 79545, "bezeichnung": "Rabbasol"}, {"nummer": 79618, "bezeichnung": "3M Superpad 432mm 17\" rot (5)"}, {"nummer": 79642, "bezeichnung": "Superpad 432mm 17\" grün"}, {"nummer": 79677, "bezeichnung": "Handsprüher Milizid"}, {"nummer": 79715, "bezeichnung": "On Top"}, {"nummer": 79731, "bezeichnung": "Forol 10l"}, {"nummer": 79774, "bezeichnung": "Staubwedel Synthetik"}, {"nummer": 79790, "bezeichnung": "Torvan 1l"}, {"nummer": 79979, "bezeichnung": "Padscheibe 31 cm Rot 12\""}, {"nummer": 79980, "bezeichnung": "Reshine Sport 10l (Harzentferner)"}, {"nummer": 79983, "bezeichnung": "Satin-Star"}, {"nummer": 79997, "bezeichnung": "Müllsack 1000 Liter Deiss (99095)"}, {"nummer": 80001, "bezeichnung": "Frostschutz für Scheiben 1 Ltr."}, {"nummer": 80003, "bezeichnung": "Dr.Schnell Schaumkanone"}, {"nummer": 80007, "bezeichnung": "VM Halteklammer Kunststoff für Abfallsack #876905"}, {"nummer": 80011, "bezeichnung": "Liebelt Geschirrhandtuch"}, {"nummer": 80021, "bezeichnung": "Taski Jontec Luna F2d 5Ltr."}, {"nummer": 80024, "bezeichnung": "Woca Ölrefresher natur 2,5 Liter"}, {"nummer": 80025, "bezeichnung": "Woca Holzbodenseife 5l (4)"}, {"nummer": 80034, "bezeichnung": "Liebelt SprühFl.sche blau Unterhaltsreiniger 600 ml"}, {"nummer": 80035, "bezeichnung": "Liebelt SprühFl.sche rot 600 ml"}, {"nummer": 80036, "bezeichnung": "Sprintmop Liebelt Grizzly blau/rot  40cm"}, {"nummer": 80037, "bezeichnung": "Liebelt Teleskopstiel 2teilig"}, {"nummer": 80038, "bezeichnung": "Liebelt FW-Halter 40cm"}, {"nummer": 80039, "bezeichnung": "Liebelt Spültuch blau/grün"}, {"nummer": 80040, "bezeichnung": "Liebelt Fenstertuch"}, {"nummer": 80043, "bezeichnung": "Edelstahlspirale 40g"}, {"nummer": 80051, "bezeichnung": "Phy Stephalen Vital 1l (10)"}, {"nummer": 80053, "bezeichnung": "CPE Überziehschuhe blau (50)"}, {"nummer": 80066, "bezeichnung": "Dreiturm Seifenspender Lavalon"}, {"nummer": 80071, "bezeichnung": "Holz-Seife 750ml (6)"}, {"nummer": 80075, "bezeichnung": "Easy Care Bangkirai"}, {"nummer": 80076, "bezeichnung": "Sprintmop Liebelt Grizzly blau/rot 50cm"}, {"nummer": 80077, "bezeichnung": "CC-Teppichreiniger 750ml (6)"}, {"nummer": 80078, "bezeichnung": "Vileda Teleskopstiel blau 50-90cm"}, {"nummer": 80080, "bezeichnung": "Hornilla Konz. 1l (12)"}, {"nummer": 80081, "bezeichnung": "Alustiel Beconnect"}, {"nummer": 80082, "bezeichnung": "Wäschenetz 40Ltr. rot Vermop"}, {"nummer": 80083, "bezeichnung": "Papier-Picker 100cm Unger Unger"}, {"nummer": 80084, "bezeichnung": "Lavidol 1l (12)"}, {"nummer": 80092, "bezeichnung": "Tempex Xtreme"}, {"nummer": 80094, "bezeichnung": "Padscheibe Melamin 406mm 16' 3M Padscheibe Melamin 41cm 3M"}, {"nummer": 80095, "bezeichnung": "Tempex XPRESS 10l Hochleistungsgrundreiniger"}, {"nummer": 80096, "bezeichnung": "Gummi Wischer 50cm Beco"}, {"nummer": 80100, "bezeichnung": "Einmalhandschu. Nitril Gr.S"}, {"nummer": 80102, "bezeichnung": "Padscheiben grün 46cm3M"}, {"nummer": 80104, "bezeichnung": "Padscheibe rot 381 mm 15\" 3M"}, {"nummer": 80110, "bezeichnung": "T-Shirt"}, {"nummer": 80111, "bezeichnung": "Nitras Textil-Warnweste neongelb"}, {"nummer": 80115, "bezeichnung": "Herren Bundhose Dipasch"}, {"nummer": 80116, "bezeichnung": "Damen Kasack Dipasch weiß"}, {"nummer": 80120, "bezeichnung": "Schutzbrille 17,5x7cm (20x10)"}, {"nummer": 80121, "bezeichnung": "Puro Schutzbrille (25x12)"}, {"nummer": 80122, "bezeichnung": "Vil.Teleskopstiel blau 100-180cm blau Vil.Teleskopstiel blau"}, {"nummer": 80123, "bezeichnung": "Vollpflege matt 5 Liter Vollpflege matt 5 Ltr."}, {"nummer": 80129, "bezeichnung": "Neutralreiniger Pallmann"}, {"nummer": 80132, "bezeichnung": "Maxx Magic 2 1l (12)"}, {"nummer": 80133, "bezeichnung": "Maxx Magic 2  5 Liter"}, {"nummer": 80134, "bezeichnung": "Milizid Lemonfresh 10l"}, {"nummer": 80135, "bezeichnung": "Maxx Magic S 1l"}, {"nummer": 80142, "bezeichnung": "Pad Super rot 21' für 53 u.55cm"}, {"nummer": 80144, "bezeichnung": "Liebelt FW-Halter 50cm"}, {"nummer": 80145, "bezeichnung": "Sanierer Waschmaschine 1 Liter"}, {"nummer": 80147, "bezeichnung": "Glasfaserstiel "}, {"nummer": 80149, "bezeichnung": "Sweatshirt Dipasch alle Größen"}, {"nummer": 80152, "bezeichnung": "Grizzly Desinfektion 1 Ltr. AFZ"}, {"nummer": 80158, "bezeichnung": "Saugtüten Kärcher NT561 ECO Kärcher"}, {"nummer": 80161, "bezeichnung": "Latzhosen Dipasch Dipasch"}, {"nummer": 80501, "bezeichnung": "Perocid 10l"}, {"nummer": 80506, "bezeichnung": "Fl.mingo Stream Jeikner 150cm"}, {"nummer": 80508, "bezeichnung": "Sauba Steckdosenbürste UNO blau/grau"}, {"nummer": 80513, "bezeichnung": "Forsan 1l (12)"}, {"nummer": 80518, "bezeichnung": "Maxx Indur S 1l"}, {"nummer": 80519, "bezeichnung": "Maxx Brial S 1 Liter Ecolab"}, {"nummer": 80520, "bezeichnung": "Incidin Pro 2 Liter"}, {"nummer": 80523, "bezeichnung": "On Top Samt"}, {"nummer": 80530, "bezeichnung": "Sprintmop Progressive 50cm "}, {"nummer": 80531, "bezeichnung": "Bendurol Ultra 5 Ltr. Benduro-Ultra 5 Ltr."}, {"nummer": 80533, "bezeichnung": "Kiehl Torvan Konz. 10l"}, {"nummer": 80534, "bezeichnung": "Rapa Plus Desinf. Professionell 20kg+"}, {"nummer": 80539, "bezeichnung": "Rapa-Plus 20 Kg. Dr. Schnell Rapa-Plus 20 KG. Waschmittel Dr"}, {"nummer": 80540, "bezeichnung": "Sprintmop Progressive 40cm"}, {"nummer": 80542, "bezeichnung": "Kiehl Powerfix-Gel 1l (6)"}, {"nummer": 80545, "bezeichnung": "Unger Fell grün 45cm Monsoon"}, {"nummer": 80546, "bezeichnung": "Saugtüten Kärcher T12/1"}, {"nummer": 80547, "bezeichnung": "Pad-Gitterleinen 3M 406mm 100"}, {"nummer": 80549, "bezeichnung": "Tempex-Ultra 10 Ltr."}, {"nummer": 80551, "bezeichnung": "Parkett & Korkglanz 5 Ltr. Parkett & Korkglanz 5 Ltr."}, {"nummer": 80552, "bezeichnung": "TOPCare Matt 10l"}, {"nummer": 80553, "bezeichnung": "Saugtüten Nilco Micro"}, {"nummer": 80555, "bezeichnung": "Vileda Staubmop Synthetik 60cm"}, {"nummer": 80556, "bezeichnung": "Vileda Staubmop Klapphalter 60cm"}, {"nummer": 80562, "bezeichnung": "Mistral Wood 1 Liter Dr. Schnell"}, {"nummer": 80564, "bezeichnung": "Schirocco Clean 10 Ltr."}, {"nummer": 80574, "bezeichnung": "Schirocco Forte 10l"}, {"nummer": 80577, "bezeichnung": "Levante 1l"}, {"nummer": 80578, "bezeichnung": "Levante Eco 10l"}, {"nummer": 80580, "bezeichnung": "FW.Bezüge Vileda Base Micro 50cm Vileda"}, {"nummer": 80583, "bezeichnung": "Grillmaster 600 ml Buzil"}, {"nummer": 80589, "bezeichnung": "Baumwollhanschuhe Handschuh Stoff"}, {"nummer": 80592, "bezeichnung": "Ulmanol D 10 Ltr. Fa. Scheck, Ulm"}, {"nummer": 80593, "bezeichnung": "Padscheiben grün 53cm 21'"}, {"nummer": 80594, "bezeichnung": "Ariel System 7 flüssig 20l"}, {"nummer": 80595, "bezeichnung": "Ariel System 8 flüssig 20l"}, {"nummer": 80597, "bezeichnung": "CWS BestCreamStandard 500 ml"}, {"nummer": 80598, "bezeichnung": "Forolfee 500ml (6)"}, {"nummer": 80612, "bezeichnung": "Vileda Alustiel Clip blau 150cm"}, {"nummer": 80615, "bezeichnung": "CimoCid Sensitive"}, {"nummer": 80620, "bezeichnung": "Desifor One Flächendesinf."}, {"nummer": 80622, "bezeichnung": "Desifor A 10l"}, {"nummer": 80623, "bezeichnung": "Levante 10l"}, {"nummer": 80627, "bezeichnung": "Mundschutz weiss u. blau verschiedene Lieferanten"}, {"nummer": 80628, "bezeichnung": "Dosierpumpe Dr. Schnell für 10 Ltr. Kanister Desinfektionrei"}, {"nummer": 80629, "bezeichnung": "Lobacare Parkettöl 1 Liter"}, {"nummer": 80630, "bezeichnung": "HM Dismozon Plus"}, {"nummer": 80632, "bezeichnung": "Copex 10 Liter"}, {"nummer": 80634, "bezeichnung": "Micro Schutzanzug Tector Schutzanzug"}, {"nummer": 80638, "bezeichnung": "Melamin Combo Pad 13'' 325 mm grau/weiß  Fa. Weber"}, {"nummer": 80641, "bezeichnung": "Aktivin RubStar Handwaschpaste 1000ml"}, {"nummer": 80642, "bezeichnung": "Aktivin PuraSkin Waschlotion 1000 ml"}, {"nummer": 80645, "bezeichnung": "TopCare Floorfit 10 Liter"}, {"nummer": 80646, "bezeichnung": "Handsprüher Lavidol weiss"}, {"nummer": 80647, "bezeichnung": "Nilco S8"}, {"nummer": 80648, "bezeichnung": "Desifor Plexifee 500 ml"}, {"nummer": 80649, "bezeichnung": "Bioline Müllbeutel 30l 500x600 natur 20stk"}, {"nummer": 80652, "bezeichnung": "Mehrwegbehälter Blau  54Liter"}, {"nummer": 80655, "bezeichnung": "Handsprüher Levante"}, {"nummer": 80656, "bezeichnung": "CleanMotion Werkstattreiniger 1 Liter"}, {"nummer": 80657, "bezeichnung": "Melamin Combo Pad 530mm 21' grau-weiß"}, {"nummer": 80661, "bezeichnung": "Rabbasol Autoschaumwäsche"}, {"nummer": 80664, "bezeichnung": "Makita Saugtüten für"}, {"nummer": 80671, "bezeichnung": "Vileda Base Loop Blau 40cm"}, {"nummer": 80672, "bezeichnung": "Enteiserspray 500ml"}, {"nummer": 80675, "bezeichnung": "Milifix  10 Ltr."}, {"nummer": 80678, "bezeichnung": "bestfour Geräteentkalker 500ml"}, {"nummer": 80684, "bezeichnung": "Handtuchrolle 2 Lg. Katrin  Classic"}, {"nummer": 80685, "bezeichnung": "Scandic Teleskopstiel Vermop"}, {"nummer": 80686, "bezeichnung": "Juwex Pad Diamant 510 mm 20''"}, {"nummer": 80688, "bezeichnung": "Reinigungsw. Varietta Plus2"}, {"nummer": 80691, "bezeichnung": "Milifix-Ultra  1 Ltr."}, {"nummer": 80692, "bezeichnung": "Sprintmop Tronic light 40cm"}, {"nummer": 80693, "bezeichnung": "SprintmopTronic light 50cm"}, {"nummer": 80695, "bezeichnung": "Pad Microfaser Glit 406mm 16' weiss"}, {"nummer": 80698, "bezeichnung": "Reinigungsw. Varietta"}, {"nummer": 80702, "bezeichnung": "Saugschlauch  S8 / S20"}, {"nummer": 80703, "bezeichnung": "Kehrgarnitur 20cm mit Lippe"}, {"nummer": 80705, "bezeichnung": "Berry Neutralreiniger 1Liter"}, {"nummer": 80706, "bezeichnung": "Lemon Neutralreiniger mit duft"}, {"nummer": 80708, "bezeichnung": "Mehrweg-Stapelbehälter mit Klappdeckel 56 Liter"}, {"nummer": 80710, "bezeichnung": "Haug Alustiel 145cm PHB blaue Kappe"}, {"nummer": 80711, "bezeichnung": "Haug Wasserschieber 62cm Kunststoff"}, {"nummer": 80712, "bezeichnung": "Bodensaugdüse Nilco S8 / S20"}, {"nummer": 80713, "bezeichnung": "Stoko Estesol Classic 1 Ltr."}, {"nummer": 80714, "bezeichnung": "KCP Scott Control Slim 1 lg"}, {"nummer": 80716, "bezeichnung": "Augenspülflasche Plum 500ml."}, {"nummer": 80717, "bezeichnung": "Mehrweg-Stapelbehälter mit Klappdeckel 77 Liter"}, {"nummer": 80718, "bezeichnung": "Etikettenhalter für Mehrwegbehälter"}, {"nummer": 80719, "bezeichnung": "Milizid Cool Breeze 1l"}, {"nummer": 80722, "bezeichnung": "Nilco Saugrohr S8 schwarz Metall"}, {"nummer": 80803, "bezeichnung": "Milizid Cool Breeze 10l"}, {"nummer": 81100, "bezeichnung": "Einmalhandschuhe Nitril Gr.M"}, {"nummer": 81110, "bezeichnung": "Einmalhandschu. Nitril Gr.M"}, {"nummer": 81111, "bezeichnung": "Einmalhandschu. Nitril Gr.L"}, {"nummer": 81599, "bezeichnung": "Fahrwagen Mistral Sprint "}, {"nummer": 82100, "bezeichnung": "Einmalhandschuhe Nitril Gr. L"}, {"nummer": 82102, "bezeichnung": "Samolind Sensitive 2in1"}, {"nummer": 82105, "bezeichnung": "Kareima Bezug 50cm"}, {"nummer": 82106, "bezeichnung": "Pad SSP Plus braun 432mm 17\""}, {"nummer": 82712, "bezeichnung": "Bioline Müllbeutel 20l"}, {"nummer": 83100, "bezeichnung": "Einmalhandschu. Nitril Gr.XL"}, {"nummer": 84607, "bezeichnung": "Gummi-Schürze 90x120cm 500my"}];
+
+    const numInput = document.getElementById('searchNumber');
+    const nameInput = document.getElementById('searchName');
+    const numList = document.getElementById('numberList');
+    const nameList = document.getElementById('nameList');
+    dataList.forEach(item => {
+      const o1 = document.createElement('option'); o1.value = item.nummer; numList.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value = item.bezeichnung; nameList.appendChild(o2);
+    });
+    numInput.addEventListener('change', () => {
+      const found = dataList.find(i => i.nummer.toString() === numInput.value);
+      if (found) nameInput.value = found.bezeichnung;
+    });
+    nameInput.addEventListener('change', () => {
+      const found = dataList.find(i => i.bezeichnung === nameInput.value);
+      if (found) numInput.value = found.nummer;
+    });
+    document.getElementById('addButton').addEventListener('click', () => {
+      const qtyInput = document.getElementById("inputQuantity");
+      const num = numInput.value.trim(), name = nameInput.value.trim(), qty = qtyInput.value.trim();
+      if (!num || !name || !qty) return alert('Nummer, Bezeichnung und Menge erforderlich');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Nummer">${num}</td>
+        <td data-label="Bezeichnung">${name}</td>
+<td data-label="Menge">${qty}</td>
+        <td data-label="Barcode"><canvas></canvas></td>
+        <td data-label="Aktion"><button class="delete-btn">🗑️</button></td>
+      `;
+      JsBarcode(tr.querySelector('canvas'), num, {format:'CODE128', width:2, height:30});
+      tr.querySelector('.delete-btn').addEventListener('click', () => tr.remove());
+      document.querySelector('#picklist tbody').appendChild(tr);
+      numInput.value = ''; nameInput.value = ''; qtyInput.value = ''; 
+    });
+    document.getElementById('savePdf').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 20;
+      const note = document.getElementById('headerNote').value;
+      if (note) { doc.setFontSize(14); doc.text(note, 14, y); y += 10; }
+      doc.setFontSize(12);
+      doc.text('Nummer', 14, y);
+      doc.text('Bezeichnung', 50, y);
+      doc.text('Barcode', 100, y);
+      doc.text('Menge', 145, y);
+      y += 8;
+      document.querySelectorAll('#picklist tbody tr').forEach((row, i) => {
+        const num = row.children[0].textContent;
+        const name = row.children[1].textContent;
+        const qty = row.children[2].textContent;
+        const img = row.querySelector('canvas').toDataURL('image/png');
+        doc.text(num, 14, y);
+        doc.text(name, 50, y);
+        doc.addImage(img, 'PNG', 100, y - 5, 40, 15);
+        doc.text(qty, 145, y);
+        y += 20;
+        if (y > 280) { doc.addPage(); y = 20; }
+      });
+      doc.save('Materialliste.pdf');
+    });
+  </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const sections = document.querySelectorAll(".section");
+  const showSection = (id) => {
+    sections.forEach(sec => sec.style.display = (sec.id === id ? "block" : "none"));
+  };
+  window.showSection = showSection;
+  showSection("main");
+});
+</script><script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('#picklist').addEventListener('dblclick', (e) => {
+    const cell = e.target;
+    if (cell.tagName === 'TD' && cell.getAttribute('data-label') === 'Menge') {
+      const original = cell.textContent;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = 1;
+      input.value = original;
+      input.style.width = '60px';
+      cell.textContent = '';
+      cell.appendChild(input);
+      input.focus();
+
+      input.addEventListener('blur', () => {
+        const value = input.value.trim() || original;
+        cell.textContent = value;
+        saveListToLocalStorage();
+      });
+
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === 'Escape') {
+          input.blur();
+        }
+      });
+    }
+  });
+});
+
+
+function saveListToLocalStorage() {
+  const rows = Array.from(document.querySelectorAll('#picklist tbody tr')).map(row => ({
+    nummer: row.children[0].textContent,
+    bezeichnung: row.children[1].textContent,
+    menge: row.children[2].textContent
+  }));
+  localStorage.setItem('materialList', JSON.stringify(rows));
+}
+
+function loadListFromLocalStorage() {
+  const data = localStorage.getItem('materialList');
+  if (!data) return;
+  const items = JSON.parse(data);
+  items.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Nummer">${item.nummer}</td>
+      <td data-label="Bezeichnung">${item.bezeichnung}</td>
+<td data-label="Menge">${item.menge}</td>
+      <td data-label="Barcode"><canvas></canvas></td>
+      <td data-label="Aktion"><button class="delete-btn">🗑️</button></td>
+    `;
+    JsBarcode(tr.querySelector('canvas'), item.nummer, {format:'CODE128', width:2, height:30});
+    tr.querySelector('.delete-btn').addEventListener('click', () => {
+      tr.remove();
+      saveListToLocalStorage();
+    });
+    document.querySelector('#picklist tbody').appendChild(tr);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadListFromLocalStorage();
+  const addBtn = document.getElementById('addButton');
+  addBtn.addEventListener('click', () => {
+    setTimeout(saveListToLocalStorage, 100); // nach DOM-Update speichern
+  });
+});
+</script><script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('#picklist').addEventListener('dblclick', (e) => {
+    const cell = e.target;
+    if (cell.tagName === 'TD' && cell.getAttribute('data-label') === 'Menge') {
+      const original = cell.textContent;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = 1;
+      input.value = original;
+      input.style.width = '60px';
+      cell.textContent = '';
+      cell.appendChild(input);
+      input.focus();
+
+      input.addEventListener('blur', () => {
+        const value = input.value.trim() || original;
+        cell.textContent = value;
+        saveListToLocalStorage();
+      });
+
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === 'Escape') {
+          input.blur();
+        }
+      });
+    }
+  });
+});
+
+
+document.getElementById('clearList').addEventListener('click', () => {
+  if (confirm('Möchtest du die Liste wirklich löschen?')) {
+    localStorage.removeItem('materialList');
+    document.querySelector('#picklist tbody').innerHTML = '';
+  }
+});
+</script>
+<script>
+document.getElementById('exportExcel').addEventListener('click', () => {
+  const rows = Array.from(document.querySelectorAll('#picklist tbody tr')).map(row => ({
+    'Artikelnummer': row.children[0].textContent,
+    'Bezeichnung': row.children[1].textContent,
+    'Menge': row.children[2].textContent
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Materialliste");
+
+  XLSX.writeFile(workbook, "Materialliste.xlsx");
+});
+</script>
+
+</body>
+</html>
